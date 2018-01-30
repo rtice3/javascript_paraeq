@@ -1,0 +1,748 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Parametric EQ Redraw</title>
+	<link href="css/dot-luv/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+	<link href="css/examples.css" rel="stylesheet">
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+	
+	<script src="https://code.jquery.com/jquery-1.9.1.min.js"   integrity="sha256-wS9gmOZBqsqWxgIVgA8Y9WcQOa7PgSIX+rPA0VL2rbQ="   crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.10.3/jquery-ui.min.js" integrity="sha256-lnH4vnCtlKU2LmD0ZW1dU7ohTTKrcKP50WA9fa350cE=" crossorigin="anonymous"></script>
+	<script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+	<script language="javascript" type="text/javascript" src="js/globals.js"></script>
+	<script language="javascript" type="text/javascript" src="js/filter_calc.js"></script>
+	<script language="javascript" type="text/javascript" src="js/graphing_func.js"></script>
+	<script language="javascript" type="text/javascript" src="js/slider_func.js"></script>
+	
+	<script type="text/javascript">
+		$(function() {
+			init();
+
+			get_new();
+// ******************************************* INDICATORS *****************************
+			$( "#hf_indicator" ).draggable({
+				containment: "#placeholder",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_hf = ppos.freq;
+					g_hf = ppos.gain;
+					get_new();
+					update_slider(f_hf, g_hf, $( "#hf_fslider" ), $( "#hf_gslider" ), $("#hf_fval" ), $("#hf_gval" ));
+				},
+				
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 2);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_hf, g_hf, this);
+					console.log("hf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#hf_bypass" ).trigger("click");
+			});
+
+			$( "#hmf_indicator" ).draggable({
+				containment: "#placeholder",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_hmf = ppos.freq;
+					g_hmf = ppos.gain;
+					get_new();
+					update_slider(f_hmf, g_hmf, $( "#hmf_fslider" ), $( "#hmf_gslider" ), $("#hmf_fval" ), $("#hmf_gval" ));
+				}, 
+
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 3);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_hmf, g_hmf, this);
+					console.log("hmf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#hmf_bypass" ).trigger("click");
+			});
+
+			$( "#lmf_indicator" ).draggable({
+				containment: "#placeholder",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_lmf = ppos.freq;
+					g_lmf = ppos.gain;
+					get_new();
+					update_slider(f_lmf, g_lmf, $( "#lmf_fslider" ), $( "#lmf_gslider" ), $("#lmf_fval" ), $("#lmf_gval" ));
+				}, 
+
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 4);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_lmf, g_lmf, this);
+					console.log("lmf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#lmf_bypass" ).trigger("click");
+			});
+
+			$( "#lf_indicator" ).draggable({
+				containment: "#placeholder",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_lf = ppos.freq;
+					g_lf = ppos.gain;
+					get_new();
+					update_slider(f_lf, g_lf, $( "#lf_fslider" ), $( "#lf_gslider" ), $("#lf_fval" ), $("#lf_gval" ));
+				}, 
+
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 5);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_lf, g_lf, this);
+					console.log("lf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#lf_bypass" ).trigger("click");
+			});
+
+			$( "#hpf_indicator" ).draggable({
+				containment: "#placeholder",
+				axis: "x",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_hpf = ppos.freq;
+					get_new();
+					update_slider_pass(f_hpf, $( "#hpf_fslider" ), $("#hpf_fval" ));
+				}, 
+
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 0);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_hpf, 0, this);
+					console.log("hpf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#hpf_bypass" ).trigger("click");
+			});
+
+			$( "#lpf_indicator" ).draggable({
+				containment: "#placeholder",
+				axis: "x",
+				scroll: false,
+				drag: function(event, ui) {
+					var ppos = d2p(ui.offset, this);
+					f_lpf = ppos.freq;
+					get_new();
+					update_slider_pass(f_lpf, $( "#lpf_fslider" ), $("#lpf_fval" ));
+				}, 
+
+				start: function(event, ui) {
+					$( "#tabs" ).tabs( "option", "active", 1);
+				},
+
+				create: function(event, ui) {
+					var dpos = p2d(f_lpf, 0, this);
+					console.log("lpf: ", dpos);
+					this.style.top = dpos.top;
+					this.style.left = dpos.left;
+				}
+			}).dblclick( function() {
+				$( "#lpf_bypass" ).trigger("click");
+			});
+
+			$( "#tabs" ).tabs({ active: 0 });
+// ******************************************* BYPASS *********************************
+			$( "#hf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				hf_en = bypass_enable(hf_en, 2);
+				get_new();
+			});
+
+			$( "#hmf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				hmf_en = bypass_enable(hmf_en, 3);
+				get_new();
+			});
+
+			$( "#lmf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				lmf_en = bypass_enable(lmf_en, 4);
+				get_new();
+			});
+
+			$( "#lf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				lf_en = bypass_enable(lf_en, 5);
+				get_new();
+			});
+
+			$( "#hpf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				hpf_en = bypass_enable(hpf_en, 0);
+				get_new();
+			});
+
+			$( "#lpf_bypass" ).button( 
+				{
+				icons: {
+					primary: "ui-icon-power"
+				},
+				text: true
+			}).change( function() {
+				lpf_en = bypass_enable(lpf_en, 1);
+				get_new();
+			});
+// ******************************************* SLIDERS ********************************
+			$("#hpf_fslider").slider({
+				value: f2s(f_hpf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_hpf = do_fslide(ui.value, 0, $("#hpf_fval"), $( "#hpf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#hpf_fval").val(s2f($("#hpf_fslider")).toFixed(0));
+
+			$("#hpf_qslider").slider({
+				value: q2s(q_hpf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#hpf_qval").val(q_scale[ui.value].toFixed(2));					
+					q_hpf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#hpf_qval").val(s2q($("#hpf_qslider")).toFixed(2));
+
+			$("#lpf_fslider").slider({
+				value: f2s(f_lpf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_lpf = do_fslide(ui.value, 0, $("#lpf_fval"), $( "#lpf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#lpf_fval").val(s2f($("#lpf_fslider")).toFixed(0));
+
+			$("#lpf_qslider").slider({
+				value: q2s(q_lpf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#lpf_qval").val(q_scale[ui.value].toFixed(2));
+					q_lpf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#lpf_qval").val(s2q($("#lpf_qslider")).toFixed(2));
+
+			$("#hf_fslider").slider({
+				value: f2s(f_hf), 
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_hf = do_fslide(ui.value, g_hf, $("#hf_fval"), $( "#hf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#hf_fval").val(s2f($("#hf_fslider")).toFixed(0));
+
+			$("#hf_gslider").slider({
+				value: g_hf,
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: min_g,
+				max: max_g,
+				step: 0.1,
+				slide: function(event, ui) {
+					g_hf = do_gslide(f_hf, ui.value, $("#hf_gval"), $( "#hf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#hf_gval").val($("#hf_gslider").slider("value"));
+
+			$("#hf_qslider").slider({
+				value: q2s(q_hf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#hf_qval").val(q_scale[ui.value].toFixed(2));
+					q_hf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#hf_qval").val(s2q($("#hf_qslider")).toFixed(2));
+
+			$("#hmf_fslider").slider({
+				value: f2s(f_hmf), 
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_hmf = do_fslide(ui.value, g_hmf, $("#hmf_fval"), $( "#hmf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#hmf_fval").val(s2f($("#hmf_fslider")).toFixed(0));
+
+			$("#hmf_gslider").slider({
+				value: g_hmf,
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: min_g,
+				max: max_g,
+				step: 0.1,
+				slide: function(event, ui) {
+					g_hmf = do_gslide(f_hmf, ui.value, $("#hmf_gval"), $( "#hmf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#hmf_gval").val($("#hmf_gslider").slider("value"));
+
+			$("#hmf_qslider").slider({
+				value: q2s(q_hmf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#hmf_qval").val(q_scale[ui.value].toFixed(2));
+					q_hmf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#hmf_qval").val(s2q($("#hmf_qslider")).toFixed(2));
+
+			$("#lmf_fslider").slider({
+				value: f2s(f_lmf), 
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_lmf = do_fslide(ui.value, g_lmf, $("#lmf_fval"), $( "#lmf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#lmf_fval").val(s2f($("#lmf_fslider")).toFixed(0));
+
+			$("#lmf_gslider").slider({
+				value: g_lmf,
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: min_g,
+				max: max_g,
+				step: 0.1,
+				slide: function(event, ui) {
+					g_lmf = do_gslide(f_lmf, ui.value, $("#lmf_gval"), $( "#lmf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#lmf_gval").val($("#lmf_gslider").slider("value"));
+
+			$("#lmf_qslider").slider({
+				value: q2s(q_lmf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#lmf_qval").val(q_scale[ui.value].toFixed(2));
+					q_lmf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#lmf_qval").val(s2q($("#lmf_qslider")).toFixed(2));
+
+			$("#lf_fslider").slider({
+				value: f2s(f_lf), 
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: slider_scale_steps - 1,
+				slide: function(event, ui) {
+					f_lf = do_fslide(ui.value, g_lf, $("#lf_fval"), $( "#lf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#lf_fval").val(s2f($("#lf_fslider")).toFixed(0));
+
+			$("#lf_gslider").slider({
+				value: g_lf,
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: min_g,
+				max: max_g,
+				step: 0.1,
+				slide: function(event, ui) {
+					g_lf = do_gslide(f_lf, ui.value, $("#lf_gval"), $( "#lf_indicator" ));
+					get_new();
+				}
+			});
+
+			$("#lf_gval").val($("#lf_gslider").slider("value"));
+
+			$("#lf_qslider").slider({
+				value: q2s(q_lf),
+				orientation: "vertical",
+				range: "min",
+				animate: true,
+				min: 1,
+				max: q_scale_steps - 1,
+				slide: function(event, ui) {
+					$("#lf_qval").val(q_scale[ui.value].toFixed(2));
+					q_lf = q_scale[ui.value];
+					get_new();
+				}
+			});
+
+			$("#lf_qval").val(s2q($("#lf_qslider")).toFixed(2));
+		});
+
+	</script>
+</head>
+<body>
+
+	<div id="header">
+		<h2>Parametric EQ</h2>
+	</div>
+
+	<div id="content">
+		<table>
+			<tr>
+				<td colspan="3">
+					<div class="demo-container">
+						<div id="placeholder" class="demo-placeholder">	
+						</div>
+					</div>
+				</td>
+				<td style="padding: 1px; vertical-align: top;">
+					<table class="bypass_class" style= "width: 125px; vertical-align: top;">
+						<th style="text-align: center;">
+							BYPASS
+						</th>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="hpf_bypass" /><label for="hpf_bypass" style="color: #A0A0A0;">HPF</label>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="lpf_bypass" /><label for="lpf_bypass" style="color: #A0A0A0;">LPF</label>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="hf_bypass" checked /><label for="hf_bypass" style="color: #00FF00;"><pre>HF </pre></label>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="hmf_bypass" checked /><label for="hmf_bypass" style="color: #FF0000;">HMF</label>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="lmf_bypass" checked /><label for="lmf_bypass" style="color: #0000FF;">LMF</label>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 20px;">
+								<input type="checkbox" id="lf_bypass" checked /><label for="lf_bypass" style="color: #FF9900;"><pre>LF </pre></label>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" align="center">
+					<div id="tabs" class="tabs">
+						<ul>
+							<li><a href="#hpf-tab">HPF</a></li>
+							<li><a href="#lpf-tab">LPF</a></li>
+							<li><a href="#hf-tab">HF</a></li>
+							<li><a href="#hmf-tab">HMF</a></li>
+							<li><a href="#lmf-tab">LMF</a></li>
+							<li><a href="#lf-tab">LF</a></li>
+						</ul>
+						<div id="hpf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hpf_fval">Freq: </label>
+										<input type="text" id="hpf_fval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hpf_qval">Q: </label>
+										<input type="text" id="hpf_qval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="hpf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;">
+									</td>
+									<td style="width: 282px;">
+										<div id="hpf_qslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="lpf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lpf_fval">Freq: </label>
+										<input type="text" id="lpf_fval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lpf_qval">Q: </label>
+										<input type="text" id="lpf_qval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="lpf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;">
+									</td>
+									<td style="width: 282px;">
+										<div id="lpf_qslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="hf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hf_fval">Freq: </label>
+										<input type="text" id="hf_fval" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hf_gval">Gain: </label>
+										<input type="text" id="hf_gval" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hf_qval">Q: </label>
+										<input type="text" id="hf_qval" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="hf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;" style="height:120px; float:left; margin:15px;">
+										<div id="hf_gslider"></div>
+									</td>
+									<td style="width: 282px;" style="height:120px; float:left; margin:15px;">
+										<div id="hf_qslider"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="hmf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hmf_fval">Freq: </label>
+										<input type="text" id="hmf_fval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hmf_gval">Gain: </label>
+										<input type="text" id="hmf_gval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="hmf_qval">Q: </label>
+										<input type="text" id="hmf_qval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="hmf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;">
+										<div id="hmf_gslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 282px;">
+										<div id="hmf_qslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="lmf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lmf_fval">Freq: </label>
+										<input type="text" id="lmf_fval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lmf_gval">Gain: </label>
+										<input type="text" id="lmf_gval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lmf_qval">Q: </label>
+										<input type="text" id="lmf_qval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="lmf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;">
+										<div id="lmf_gslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 282px;">
+										<div id="lmf_qslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="lf-tab">
+							<table>
+								<tr>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lf_fval">Freq: </label>
+										<input type="text" id="lf_fval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lf_gval">Gain: </label>
+										<input type="text" id="lf_gval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+									<td style="height: 30px; vertical-align: bottom; text-align: center;">
+										<label for="lf_qval">Q: </label>
+										<input type="text" id="lf_qval" style="border: 0; color: #f6931f; font-weight: bold;" />
+									</td>
+								</tr>
+								<tr>
+									<td style="width: 284px;">
+										<div id="lf_fslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 284px;">
+										<div id="lf_gslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+									<td style="width: 282px;">
+										<div id="lf_qslider" style="height:120px; float:left; margin:15px;"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</td>
+				<td>
+				</td>
+			</tr>
+		</table>
+
+		<div class="ui-widget-content">
+			<img id="hf_indicator" class="hf_indicator" src="css/eq_curve_blank.png">
+			<img id="hmf_indicator" class="hmf_indicator" src="css/eq_curve_blank.png">
+			<img id="lmf_indicator" class="lmf_indicator" src="css/eq_curve_blank.png">
+			<img id="lf_indicator" class="lf_indicator" src="css/eq_curve_blank.png">
+			<img id="hpf_indicator" class="pf_indicator" src="css/eq_curve_blank.png">
+			<img id="lpf_indicator" class="pf_indicator" src="css/eq_curve_blank.png">
+		</div>	
+	</div>
+
+	<div id="footer">
+		Copyright &copy; 2013 - Mark of the Unicorn Inc.
+	</div>
+
+</body>
+</html>
